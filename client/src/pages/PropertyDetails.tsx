@@ -203,11 +203,11 @@ export default function PropertyDetails({ slug }: { slug: string }) {
         </button>
         <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="relative overflow-hidden rounded-[24px] bg-[#d9d4c9]">
-            <div className="aspect-[1.2/0.84] overflow-hidden sm:aspect-[1.45/0.86]">
+            <div className="relative flex aspect-[1.2/0.84] items-center justify-center overflow-hidden bg-[#e5e0d6] sm:aspect-[1.45/0.86]">
               <img
                 src={gallery[active]}
                 alt={property.title}
-                className="h-full w-full object-cover"
+                className="max-h-full max-w-full object-contain"
               />
             </div>
             <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4">

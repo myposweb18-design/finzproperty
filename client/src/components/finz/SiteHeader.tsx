@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { ChevronDown, Menu, Search, X } from "lucide-react";
 import { Logo } from "./Logo";
@@ -25,6 +25,7 @@ const explore = [
 ];
 export function SiteHeader({ solid = false }: { solid?: boolean }) {
   const [open, setOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
   const [location] = useLocation();
   const { user } = useAuth();
   const dark = !solid && location === "/";
@@ -35,7 +36,17 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
       if (event.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    const closeOutside = (event: PointerEvent) => {
+      if (!headerRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnResize = () => setOpen(false);
+    window.addEventListener("pointerdown", closeOutside);
+    window.addEventListener("resize", closeOnResize);
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("pointerdown", closeOutside);
+      window.removeEventListener("resize", closeOnResize);
+    };
   }, [open]);
   const navClass = cn(
     "text-[13px] font-medium transition-colors duration-200",
@@ -45,6 +56,7 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
   );
   return (
     <header
+      ref={headerRef}
       className={cn(
         "z-50 w-full transition-colors duration-200",
         dark
