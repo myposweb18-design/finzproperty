@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, LocateFixed, Scan } from "lucide-react";
-import { MapView } from "@/components/Map";
+import { hasGoogleMapsConfig, MapView } from "@/components/Map";
+import { FreePropertyMap } from "@/components/finz/FreePropertyMap";
 import { cn } from "@/lib/utils";
 import { formatLkr } from "@shared/marketplace";
 import { focusPropertyLocality } from "@shared/mapFocus";
@@ -29,7 +30,7 @@ const coordinateCache = new Map<string, google.maps.LatLngLiteral>();
 const reducedMotion = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export function PropertyMap({ items }: { items: MapItem[] }) {
+function GooglePropertyMap({ items }: { items: MapItem[] }) {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [unlocated, setUnlocated] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -380,5 +381,13 @@ export function PropertyMap({ items }: { items: MapItem[] }) {
           "The first 50 matches are mapped initially; another selected record is located on demand."}
       </p>
     </div>
+  );
+}
+
+export function PropertyMap({ items }: { items: MapItem[] }) {
+  return hasGoogleMapsConfig() ? (
+    <GooglePropertyMap items={items} />
+  ) : (
+    <FreePropertyMap items={items} />
   );
 }

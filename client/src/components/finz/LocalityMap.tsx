@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { MapView } from "@/components/Map";
+import { hasGoogleMapsConfig, MapView } from "@/components/Map";
+import { FreeLocalityMap } from "@/components/finz/FreeLocalityMap";
 const localityCache = new Map<string, google.maps.LatLngLiteral>();
-export function LocalityMap({ location }: { location: string }) {
+function GoogleLocalityMap({ location }: { location: string }) {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [phase, setPhase] = useState<
     "locating" | "ready" | "missing" | "error"
@@ -100,5 +101,13 @@ export function LocalityMap({ location }: { location: string }) {
         or boundary. Zoom, drag or switch to satellite view to explore the area.
       </p>
     </div>
+  );
+}
+
+export function LocalityMap({ location }: { location: string }) {
+  return hasGoogleMapsConfig() ? (
+    <GoogleLocalityMap location={location} />
+  ) : (
+    <FreeLocalityMap location={location} />
   );
 }

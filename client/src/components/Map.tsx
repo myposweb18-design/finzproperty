@@ -67,6 +67,14 @@ export function loadMapScript(): Promise<void> {
   });
   return loader;
 }
+
+export function hasGoogleMapsConfig() {
+  const config = window.__MANUS_CONFIG__;
+  return Boolean(
+    config?.googleMapsApiKey || (config?.apiUrl && config.apiBrowserKey)
+  );
+}
+
 export function MapView({
   className,
   initialCenter = { lat: 7.8731, lng: 80.7718 },
