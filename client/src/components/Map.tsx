@@ -14,7 +14,9 @@ export function loadMapScript(): Promise<void> {
   if (loader) return loader;
   loader = new Promise<void>((resolve, reject) => {
     const config = window.__MANUS_CONFIG__;
-    if (!config?.apiUrl || !config.apiBrowserKey) {
+    const directKey = config?.googleMapsApiKey;
+    const managedKey = config?.apiUrl && config.apiBrowserKey;
+    if (!managedKey && !directKey) {
       reject(
         new Error("Interactive maps are not configured for this environment.")
       );
@@ -43,9 +45,11 @@ export function loadMapScript(): Promise<void> {
     }
     window.__finzMapsReady = ready;
     const url = new URL(
-      `${config.apiUrl.replace(/\/$/, "")}/v1/maps/proxy/maps/api/js`
+      managedKey
+        ? `${config.apiUrl.replace(/\/$/, "")}/v1/maps/proxy/maps/api/js`
+        : "https://maps.googleapis.com/maps/api/js"
     );
-    url.searchParams.set("key", config.apiBrowserKey);
+    url.searchParams.set("key", managedKey ? config.apiBrowserKey : directKey!);
     url.searchParams.set("v", "weekly");
     url.searchParams.set("libraries", "geocoding,marker");
     url.searchParams.set("loading", "async");

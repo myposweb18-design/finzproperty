@@ -48,7 +48,7 @@ After `SUCCESS`, refresh `http://178.128.29.191/` with Ctrl+Shift+R. Do not run 
 
 ## Login and maps
 
-The public marketplace and bundled media work without Manus credentials. Login currently uses Manus OAuth and interactive maps use the managed Google Maps proxy, so the following values in `.env` must be real values from the authorized project: `MANUS_PROJECT_ID`, `MANUS_JWT_SECRET`, `MANUS_OAUTH_API_URL`, `MANUS_OAUTH_PORTAL_URL`, `MANUS_API_URL`, `MANUS_API_KEY` and `MANUS_API_BROWSER_KEY`. Also register both `http://178.128.29.191/api/oauth/callback` and `https://finzproperty.com/api/oauth/callback` with the OAuth provider. If these values are absent, the site remains browsable but login and interactive maps correctly show as unavailable; no fake authentication or fake map data is enabled.
+The public marketplace and bundled media work without Manus credentials. Login currently uses Manus OAuth. For the exact interactive map experience with markers, satellite view, popups and select-to-zoom, use either the managed Google Maps proxy (`MANUS_API_URL` plus `MANUS_API_BROWSER_KEY`) or set `GOOGLE_MAPS_API_KEY` in `.env`. The direct key must have Google Maps JavaScript API and Geocoding enabled, billing configured, and HTTP referrers restricted to `http://178.128.29.191/*`, `https://finzproperty.com/*` and `https://www.finzproperty.com/*`. Also register both `http://178.128.29.191/api/oauth/callback` and `https://finzproperty.com/api/oauth/callback` with the OAuth provider. Without a map key, the site shows a credential-free locality preview instead of the full interactive map.
 
 ## HTTPS for finzproperty.com
 
