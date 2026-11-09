@@ -70,9 +70,10 @@ export function loadMapScript(): Promise<void> {
 
 export function hasGoogleMapsConfig() {
   const config = window.__MANUS_CONFIG__;
-  return Boolean(
-    config?.googleMapsApiKey || (config?.apiUrl && config.apiBrowserKey)
-  );
+  // Standalone hosting should use Leaflet/OpenStreetMap by default. The
+  // direct Google key is an explicit opt-in; stale managed Manus values in a
+  // copied .env must not force a broken provider path on DigitalOcean.
+  return Boolean(config?.googleMapsApiKey);
 }
 
 export function MapView({
