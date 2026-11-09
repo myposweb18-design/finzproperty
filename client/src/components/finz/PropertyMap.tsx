@@ -360,7 +360,12 @@ export function PropertyMap({ items }: { items: MapItem[] }) {
           )}
         </div>
         <div ref={mapPane} className="order-1 min-w-0 lg:order-2">
-          <MapView onMapReady={setMap} />
+          <MapView
+            onMapReady={setMap}
+            fallbackQuery={
+              selected?.location ?? items[0]?.location ?? "Sri Lanka"
+            }
+          />
         </div>
       </div>
       <p className="border-t px-5 py-3 text-xs leading-5 text-[#6c7c87]">

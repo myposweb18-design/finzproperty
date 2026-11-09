@@ -68,16 +68,19 @@ export function MapView({
   initialCenter = { lat: 7.8731, lng: 80.7718 },
   initialZoom = 7,
   onMapReady,
+  fallbackQuery = "Sri Lanka",
 }: {
   className?: string;
   initialCenter?: google.maps.LatLngLiteral;
   initialZoom?: number;
   onMapReady?: (map: google.maps.Map) => void;
+  fallbackQuery?: string;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const callback = useRef(onMapReady);
   callback.current = onMapReady;
   const [error, setError] = useState("");
+  const [fallback, setFallback] = useState(false);
   const [loading, setLoading] = useState(true);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
@@ -86,6 +89,7 @@ export function MapView({
     let observer: ResizeObserver | undefined;
     let frame = 0;
     setError("");
+    setFallback(false);
     setLoading(true);
     void loadMapScript()
       .then(() => {
@@ -121,6 +125,7 @@ export function MapView({
       .catch(e => {
         if (!disposed) {
           setError(e instanceof Error ? e.message : "Map unavailable.");
+          setFallback(true);
           setLoading(false);
         }
       });
@@ -146,6 +151,16 @@ export function MapView({
         aria-label="Interactive property locality map"
         role="region"
       />
+      {fallback && (
+        <iframe
+          key={fallbackQuery}
+          title={`Map of ${fallbackQuery}`}
+          src={`https://www.google.com/maps?q=${encodeURIComponent(`${fallbackQuery}, Sri Lanka`)}&output=embed`}
+          className="absolute inset-0 h-full w-full border-0"
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+      )}
       {loading && !error && (
         <div
           role="status"
@@ -165,24 +180,34 @@ export function MapView({
       {error && (
         <div
           role="alert"
-          className="absolute inset-0 grid place-items-center bg-[#f3f1eb] p-6 text-center"
+          className={cn(
+            "absolute inset-x-0 bottom-0 p-3 text-center",
+            fallback
+              ? "bg-white/90"
+              : "inset-y-0 grid place-items-center bg-[#f3f1eb] p-6"
+          )}
         >
           <div>
-            <MapPinned size={28} className="mx-auto text-[#a98136]" />
-            <p className="mt-3 font-semibold">Map unavailable</p>
-            <p className="mt-2 max-w-xs text-sm leading-6 text-[#657580]">
-              {error}
+            {!fallback && (
+              <MapPinned size={28} className="mx-auto text-[#a98136]" />
+            )}
+            <p className="mt-1 font-semibold">
+              {fallback ? "Map preview" : "Map unavailable"}
             </p>
-            <button
-              type="button"
-              onClick={() => setAttempt(n => n + 1)}
-              className="fp-button mt-4 min-h-11 rounded-full bg-[#0b1f33] px-5 text-sm font-semibold text-white"
-            >
-              Retry map
-            </button>
-            <p className="mt-3 text-xs text-[#657580]">
-              Matching properties remain available in the list.
+            <p className="mx-auto mt-1 max-w-xl text-xs leading-5 text-[#657580]">
+              {fallback
+                ? "Using a credential-free Google Maps preview. Add managed map credentials for interactive markers and zoom-to-property."
+                : error}
             </p>
+            {!fallback && (
+              <button
+                type="button"
+                onClick={() => setAttempt(n => n + 1)}
+                className="fp-button mt-4 min-h-11 rounded-full bg-[#0b1f33] px-5 text-sm font-semibold text-white"
+              >
+                Retry map
+              </button>
+            )}
           </div>
         </div>
       )}

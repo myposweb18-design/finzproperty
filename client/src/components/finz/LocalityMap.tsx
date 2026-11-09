@@ -62,7 +62,11 @@ export function LocalityMap({ location }: { location: string }) {
       className="overflow-hidden rounded-[18px] border border-[#e7e2d9] bg-[#f7f5f0]"
     >
       <div className="relative">
-        <MapView onMapReady={setMap} className="h-[330px] sm:h-[420px]" />
+        <MapView
+          onMapReady={setMap}
+          fallbackQuery={location}
+          className="h-[330px] sm:h-[420px]"
+        />
         {map && phase === "locating" && (
           <div
             role="status"
