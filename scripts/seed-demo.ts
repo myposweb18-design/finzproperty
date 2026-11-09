@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { createConnection } from "mysql2/promise";
 import { drizzle } from "drizzle-orm/mysql2";
 import { count, eq } from "drizzle-orm";
@@ -15,8 +16,22 @@ import {
 
 const SEED_KEY = "finzproperty-demo-inventory";
 const SEED_VERSION = "1";
+const CONFIRM_DEMO_ARG = "--confirm-demo";
+
+function removeLivePartnerClaim(description: string) {
+  return description
+    .replace(/Presented by a verified FinzProperty partner\.?/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
 
 async function main() {
+  if (!process.argv.slice(2).includes(CONFIRM_DEMO_ARG)) {
+    throw new Error(
+      `Demo seed is opt-in. Re-run with the explicit ${CONFIRM_DEMO_ARG} argument.`
+    );
+  }
+
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error("DATABASE_URL is required");
 
@@ -31,7 +46,7 @@ async function main() {
         .limit(1);
       if (alreadyApplied.length) {
         console.log(
-          `Demo seed ${SEED_VERSION} is already recorded; nothing to do.`
+          `Demo seed ${SEED_VERSION} is already recorded; no sample/non-live records were inserted.`
         );
         return;
       }
@@ -48,7 +63,7 @@ async function main() {
       ].every(rows => Number(rows[0]?.value ?? 0) === 0);
       if (!inventoryIsEmpty) {
         console.log(
-          "Inventory is not entirely empty; demo records were not inserted."
+          "Inventory is not entirely empty; 0 sample/non-live records were inserted."
         );
         return;
       }
@@ -60,10 +75,10 @@ async function main() {
           company: agent.company,
           location: agent.location,
           avatar: agent.avatar,
-          verified: agent.verified,
-          phone: agent.phone,
+          verified: false,
+          phone: "",
           listings: 0,
-          bio: agent.bio,
+          bio: `Demonstration agent record; not a live advertiser. ${agent.bio}`,
           isDemo: true,
         }))
       );
@@ -122,10 +137,10 @@ async function main() {
             image: property.image,
             gallery: JSON.stringify(property.gallery),
             featured: property.featured ?? false,
-            verified: property.verified ?? false,
+            verified: false,
             tag: property.tag ?? null,
             agentId,
-            description: property.description,
+            description: removeLivePartnerClaim(property.description),
             amenities: JSON.stringify(property.amenities),
             posted: property.posted,
             status: property.status,
@@ -138,7 +153,7 @@ async function main() {
         .insert(seedVersions)
         .values({ seedKey: SEED_KEY, version: SEED_VERSION });
       console.log(
-        `Inserted ${seedProperties.length} demo properties, ${seedAgents.length} agents, and ${seedDevelopments.length} developments.`
+        `Inserted sample/non-live demo records: ${seedProperties.length} properties, ${seedAgents.length} agents, and ${seedDevelopments.length} developments.`
       );
     });
   } finally {

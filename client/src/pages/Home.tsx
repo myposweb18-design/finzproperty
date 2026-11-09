@@ -303,10 +303,10 @@ export default function Home() {
                 href: `/guides/${g.slug}`,
                 image:
                   g.slug === "buying-property"
-                    ? "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1000&q=80"
+                    ? "/media/photo-8e10d82ce94d3417.webp"
                     : g.slug === "property-checks"
-                      ? "https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?auto=format&fit=crop&w=1000&q=80"
-                      : "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1000&q=80",
+                      ? "/media/photo-98f4b39569d90f69.webp"
+                      : "/media/photo-b4a970aa6fd50b32.webp",
               }))
               .map(article => (
                 <Link

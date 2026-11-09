@@ -22,6 +22,14 @@ rollback_proxy() {
 }
 fail() { rollback_proxy; printf '\nSTOP: %s\n' "$*" >&2; exit 1; }
 trap 'rollback_proxy; printf "\nSetup stopped at line %s. Send the error above, not your .env or passwords.\n" "$LINENO" >&2' ERR
+DEMO_SEED=false
+[[ $# -le 1 ]] || fail 'Use only the optional --demo argument.'
+case "${1:-}" in
+  '') ;;
+  --demo) DEMO_SEED=true ;;
+  --help) printf 'Usage: sudo bash scripts/setup-droplet.sh [--demo]\n--demo adds labeled sample records only to entirely empty inventory.\n'; exit 0 ;;
+  *) fail 'Unknown argument. Use --demo only to add labeled demonstration data.' ;;
+esac
 [[ $EUID -eq 0 ]] || fail 'Run with sudo.'
 for command in node pnpm mysql nginx systemctl ss tar curl; do
   command -v "$command" >/dev/null || fail "Missing command: $command"
@@ -44,14 +52,20 @@ if [[ -e $LINK || -L $LINK ]]; then
 fi
 cd "$SOURCE"
 printf '\n[1/5] Running existing database migrations...\n'
-node --input-type=module <<'JS'
+FINZ_DEMO_SEED="$DEMO_SEED" node --input-type=module <<'JS'
 import 'dotenv/config';
 import {spawnSync} from 'node:child_process';
 if (!process.env.DATABASE_URL?.startsWith('mysql://')) {
   console.error('Save a working MySQL DATABASE_URL in the project .env.'); process.exit(1);
 }
 const r=spawnSync('pnpm',['db:migrate'],{stdio:'inherit',env:process.env});
-process.exit(r.status ?? 1);
+if (r.status !== 0) process.exit(r.status ?? 1);
+if (process.env.FINZ_DEMO_SEED === 'true') {
+  console.log('Explicit demo option selected: sample records are not real offers.');
+  const seeded=spawnSync('pnpm',['seed:demo'],{stdio:'inherit',env:process.env});
+  process.exit(seeded.status ?? 1);
+}
+process.exit(0);
 JS
 printf '\n[2/5] Preparing the dedicated application service...\n'
 if ! id finzproperty >/dev/null 2>&1; then
@@ -151,4 +165,4 @@ printf '\n[5/5] Checking the port-80 health and homepage...\n'
 curl -fsS --max-time 10 -H 'Host: 178.128.29.191' http://127.0.0.1/api/health
 printf '\n'
 curl -fsS --max-time 15 -H 'Host: 178.128.29.191' http://127.0.0.1/ >/dev/null
-printf '\nSUCCESS: app and port-80 proxy respond correctly locally.\nOpen http://178.128.29.191/ in your browser.\nThe app continues after the console closes.\nA fresh database has no listings; login, managed media/maps and HTTPS need separate setup.\n'
+printf '\nSUCCESS: app and port-80 proxy respond correctly locally.\nOpen http://178.128.29.191/ in your browser.\nThe app continues after the console closes.\nBundled hero and sample photos are hosted locally. Any seeded records are labeled demonstration data. Login, maps, user-upload storage and HTTPS still need separate setup.\n'
