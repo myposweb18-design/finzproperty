@@ -1,0 +1,140 @@
+{
+  "routes": [
+    {
+      "path": "/",
+      "title": "FinzProperty"
+    },
+    {
+      "path": "/buy",
+      "title": "Buy property"
+    },
+    {
+      "path": "/rent",
+      "title": "Rent property"
+    },
+    {
+      "path": "/land",
+      "title": "Land"
+    },
+    {
+      "path": "/commercial",
+      "title": "Commercial"
+    },
+    {
+      "path": "/new-developments",
+      "title": "New developments"
+    },
+    {
+      "path": "/apartment-finder",
+      "title": "Apartment Finder"
+    },
+    {
+      "path": "/properties/:slug",
+      "title": "Property details"
+    },
+    {
+      "path": "/developments/:slug",
+      "title": "Development details"
+    },
+    {
+      "path": "/agents",
+      "title": "Agent directory"
+    },
+    {
+      "path": "/agents/:slug",
+      "title": "Agent profile"
+    },
+    {
+      "path": "/tools",
+      "title": "Property tools"
+    },
+    {
+      "path": "/tools/:tool",
+      "title": "Calculator / market resource"
+    },
+    {
+      "path": "/locations",
+      "title": "Area discovery"
+    },
+    {
+      "path": "/locations/:district",
+      "title": "District guide"
+    },
+    {
+      "path": "/compare",
+      "title": "Compare properties"
+    },
+    {
+      "path": "/insights",
+      "title": "Property insights"
+    },
+    {
+      "path": "/property-news",
+      "title": "Property news"
+    },
+    {
+      "path": "/guides",
+      "title": "Property guides"
+    },
+    {
+      "path": "/guides/:slug",
+      "title": "Property guide"
+    },
+    {
+      "path": "/news/:slug",
+      "title": "FinzProperty update"
+    },
+    {
+      "path": "/services",
+      "title": "Professional assistance"
+    },
+    {
+      "path": "/services/:service",
+      "title": "Assistance request"
+    },
+    {
+      "path": "/about",
+      "title": "About"
+    },
+    {
+      "path": "/contact",
+      "title": "Contact"
+    },
+    {
+      "path": "/faq",
+      "title": "Faq"
+    },
+    {
+      "path": "/privacy",
+      "title": "Privacy"
+    },
+    {
+      "path": "/terms",
+      "title": "Terms"
+    },
+    {
+      "path": "/safety",
+      "title": "Safety"
+    },
+    {
+      "path": "/events",
+      "title": "Events"
+    },
+    {
+      "path": "/account",
+      "title": "Account"
+    },
+    {
+      "path": "/saved-properties",
+      "title": "Saved properties"
+    },
+    {
+      "path": "/saved-searches",
+      "title": "Saved searches"
+    },
+    {
+      "path": "/admin",
+      "title": "Admin"
+    }
+  ]
+}
