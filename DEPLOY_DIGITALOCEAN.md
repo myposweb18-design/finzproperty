@@ -1,12 +1,16 @@
 # Run FinzProperty on the existing DigitalOcean Droplet
 
-This helper is for the Ubuntu Droplet at `178.128.29.191`. Node.js 22, pnpm, MySQL and Nginx must already be installed. Run `pnpm install --frozen-lockfile` and `pnpm build` first. The private project `.env` must contain a working MySQL `DATABASE_URL`; do not commit or share that file.
+This helper is for the Ubuntu Droplet at `178.128.29.191`. Node.js 22, pnpm, MySQL and Nginx must already be installed. Run `cp .env.example .env`, replace the placeholders, then `chmod 600 .env`. The private project `.env` must contain a working MySQL `DATABASE_URL`; do not commit or share that file. Run `pnpm install --frozen-lockfile` and `pnpm build` first.
 
 From the cloned repository in the Droplet console:
 
 ```bash
 cd /root/finzproperty
 git pull --ff-only origin main
+cp .env.example .env  # only the first time; then edit it with nano .env
+chmod 600 .env
+pnpm install --frozen-lockfile
+pnpm build
 sudo bash scripts/setup-droplet.sh
 ```
 
@@ -42,6 +46,24 @@ The `--demo` option is explicit. These records are clearly labeled demonstration
 
 After `SUCCESS`, refresh `http://178.128.29.191/` with Ctrl+Shift+R. Do not run `pnpm start` separately; systemd already manages the app.
 
+## Login and maps
+
+The public marketplace and bundled media work without Manus credentials. Login currently uses Manus OAuth and interactive maps use the managed Google Maps proxy, so the following values in `.env` must be real values from the authorized project: `MANUS_PROJECT_ID`, `MANUS_JWT_SECRET`, `MANUS_OAUTH_API_URL`, `MANUS_OAUTH_PORTAL_URL`, `MANUS_API_URL`, `MANUS_API_KEY` and `MANUS_API_BROWSER_KEY`. Also register both `http://178.128.29.191/api/oauth/callback` and `https://finzproperty.com/api/oauth/callback` with the OAuth provider. If these values are absent, the site remains browsable but login and interactive maps correctly show as unavailable; no fake authentication or fake map data is enabled.
+
+## HTTPS for finzproperty.com
+
+Point the domain A/AAAA records to the Droplet first, confirm that ports 80 and 443 are allowed in the DigitalOcean firewall, then run Certbot. Replace the email and use the exact domain names:
+
+```bash
+sudo apt-get update && sudo apt-get install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d finzproperty.com -d www.finzproperty.com \
+  --redirect --agree-tos --no-eff-email -m YOUR_EMAIL@example.com
+sudo systemctl reload nginx
+sudo certbot renew --dry-run
+```
+
+Use the HTTPS callback URL in the OAuth provider after the certificate succeeds. Do not submit passwords or API keys in the repository or chat.
+
 ## Remaining setup
 
-A fresh MySQL database has no live listing records. This helper does not migrate the Manus database or create real offers. Manus-hosted login, maps and future user-upload storage still require independent hosting configuration or migration; bundled images are now independent. Do not copy private platform credentials into a public repository. HTTPS is not configured by this helper. Configure HTTPS and the remaining integrations before accepting sensitive user data or treating the site as production-ready.
+A fresh MySQL database has no live listing records until `setup-droplet.sh --demo` is run. This helper does not migrate the Manus database or create real offers. Bundled images are independent; future user-upload storage still requires independent hosting configuration. Do not copy private platform credentials into a public repository. HTTPS is not configured by the helper and must be completed with the Certbot steps above before accepting sensitive user data or treating the site as production-ready.
