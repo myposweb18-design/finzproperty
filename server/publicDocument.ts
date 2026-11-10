@@ -22,6 +22,11 @@ export function escapeHtml(value: unknown) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 }
+const safeJsonLd = (value: unknown) =>
+  JSON.stringify(value)
+    .replaceAll("<", "\\u003c")
+    .replaceAll(">", "\\u003e")
+    .replaceAll("&", "\\u0026");
 const link = (href: string, label: string) =>
   `<a href="${escapeHtml(href)}">${escapeHtml(label)}</a>`;
 const businessContactMarkup = `<p><strong>Direct business contact</strong>: <a href="${escapeHtml(businessContact.telHref)}" aria-label="${escapeHtml(`Call ${businessContact.displayPhone}`)}">Call ${escapeHtml(businessContact.displayPhone)}</a> · <a href="${escapeHtml(businessContact.whatsappHref)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(`WhatsApp ${businessContact.displayPhone}`)}">WhatsApp ${escapeHtml(businessContact.displayPhone)}</a></p>`;
@@ -36,12 +41,18 @@ export async function renderPublicDocument(
 ) {
   const url = new URL(originalUrl, "https://internal.invalid");
   const path = url.pathname.replace(/\/$/, "") || "/";
+  const configuredOrigin = (
+    process.env.PUBLIC_APP_URL || "https://finzproperty.com"
+  ).replace(/\/$/, "");
+  const canonicalUrl = `${configuredOrigin}${path === "/" ? "/" : path}`;
+  const defaultImage = `${configuredOrigin}/finz-property-logo.png`;
   let title = "Find property in Sri Lanka",
     description =
       "Explore Sri Lankan homes, land, apartments and commercial property with FinzProperty.",
     body = "",
     status = 200,
-    noindex = false;
+    noindex = false,
+    ogImage = defaultImage;
   const privatePaths = [
     "/account",
     "/saved-properties",
@@ -86,6 +97,9 @@ export async function renderPublicDocument(
     else {
       title = p.title;
       description = `${p.kind} in ${p.location}. ${formatLkr(p.price, p.intent)}. ${p.isDemo ? "Demonstration record, not a live offer." : "View details and advertiser information."}`;
+      ogImage = p.image.startsWith("http")
+        ? p.image
+        : `${configuredOrigin}${p.image.startsWith("/") ? "" : "/"}${p.image}`;
       body = `<p>${escapeHtml(p.location)} · ${escapeHtml(formatLkr(p.price, p.intent))}</p><img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.title)}" width="480"/><h2>Property information</h2><p>${escapeHtml(p.description)}</p><p>${p.bedrooms} bedrooms · ${p.bathrooms} bathrooms · ${escapeHtml(p.floorArea || "Floor area not provided")} · ${escapeHtml(p.landSize || "Land extent not provided")}</p><h2>Recorded features</h2><p>${p.amenities.map(escapeHtml).join(", ")}</p>${p.isDemo ? "<p>Demonstration listing — photos, prices and contacts are illustrative.</p>" : ""}${link(`/tools/mortgage?price=${p.price}`, "Estimate home loan payments")}`;
     }
   } else if (path === "/new-developments") {
@@ -200,6 +214,19 @@ export async function renderPublicDocument(
     body = `<p>The requested page or active record could not be found.</p>${link("/", "Return to FinzProperty")}`;
   }
   const pageTitle = `${title} | FinzProperty`;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": path.startsWith("/properties/") ? "RealEstateListing" : "WebPage",
+    name: pageTitle,
+    description,
+    url: canonicalUrl,
+    isPartOf: {
+      "@type": "WebSite",
+      name: "FinzProperty",
+      url: configuredOrigin,
+    },
+    ...(path.startsWith("/properties/") && { image: ogImage }),
+  };
   let result = template
     .replace(
       /<title>[\s\S]*?<\/title>/i,
@@ -211,7 +238,7 @@ export async function renderPublicDocument(
     );
   result = result.replace(
     "</head>",
-    `<meta name="robots" content="${noindex ? "noindex,nofollow" : "index,follow"}"/><meta property="og:type" content="website"/><meta property="og:title" content="${escapeHtml(pageTitle)}"/><meta property="og:description" content="${escapeHtml(description)}"/><meta property="og:site_name" content="FinzProperty"/><meta name="twitter:card" content="summary"/><meta name="twitter:title" content="${escapeHtml(pageTitle)}"/></head>`
+    `<meta name="robots" content="${noindex ? "noindex,nofollow" : "index,follow"}"/><link rel="canonical" href="${escapeHtml(canonicalUrl)}"/><meta property="og:type" content="${path.startsWith("/properties/") ? "product" : "website"}"/><meta property="og:title" content="${escapeHtml(pageTitle)}"/><meta property="og:description" content="${escapeHtml(description)}"/><meta property="og:url" content="${escapeHtml(canonicalUrl)}"/><meta property="og:image" content="${escapeHtml(ogImage)}"/><meta property="og:site_name" content="FinzProperty"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="${escapeHtml(pageTitle)}"/><meta name="twitter:description" content="${escapeHtml(description)}"/><meta name="twitter:image" content="${escapeHtml(ogImage)}"/><script type="application/ld+json">${safeJsonLd(structuredData)}</script></head>`
   );
   result = result.replace(
     '<div id="root"></div>',
